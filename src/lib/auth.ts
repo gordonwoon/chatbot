@@ -1,8 +1,16 @@
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
-import type { NextAuthOptions } from 'next-auth'
+import type { DefaultSession, NextAuthOptions } from 'next-auth'
 import credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+    } & DefaultSession['user']
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -28,6 +36,23 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
+  callbacks: {
+    // Add this session callback
+    session: ({ session, token }) => ({
+      ...session,
+      user: {
+        ...session.user,
+        id: token.sub // The user id is stored in token.sub by default
+      }
+    }),
+    // Add this JWT callback to ensure ID is in the token
+    jwt: ({ token, user }) => {
+      if (user) {
+        token.sub = user.id // Ensures user.id is stored in token.sub
+      }
+      return token
+    }
+  },
   session: {
     strategy: 'jwt'
   }
