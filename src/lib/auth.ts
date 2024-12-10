@@ -1,8 +1,8 @@
-import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import type { DefaultSession, NextAuthOptions } from 'next-auth'
 import credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
+import { dbConnect } from './mongodb'
 
 declare module 'next-auth' {
   interface Session {
@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        await connectDB()
+        await dbConnect()
         const user = await User.findOne({
           email: credentials?.email
         }).select('+password')
@@ -36,6 +36,10 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
+  pages: {
+    signIn: '/signin',
+    error: '/signin' // Error code passed in query string
+  },
   callbacks: {
     // Add this session callback
     session: ({ session, token }) => ({

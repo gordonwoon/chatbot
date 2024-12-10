@@ -1,6 +1,6 @@
-import { connectDB } from '@/lib/mongodb'
-import { withAuth } from '@/middleware/auth'
+import { authOptions } from '@/lib/auth'
 import Message from '@/models/Message'
+import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 
 interface CreateMessageRequest {
@@ -9,9 +9,9 @@ interface CreateMessageRequest {
   parentMessageId?: string
 }
 
-export const GET = withAuth(async (request: Request, user) => {
+export const GET = async (request: Request) => {
   try {
-    await connectDB()
+    const session = await getServerSession(authOptions)
 
     // Get conversation ID from URL params
     const { searchParams } = new URL(request.url)
@@ -26,7 +26,7 @@ export const GET = withAuth(async (request: Request, user) => {
 
     // Fetch messages for specific conversation
     const messages = await Message.find({
-      userId: user.id,
+      userId: session?.user.id,
       conversationId
     }).sort({ timestamp: 1 })
 
@@ -38,12 +38,11 @@ export const GET = withAuth(async (request: Request, user) => {
       { status: 500 }
     )
   }
-})
+}
 
-export const POST = withAuth(async (request: Request, user) => {
+export const POST = async (request: Request) => {
   try {
-    await connectDB()
-
+    const session = await getServerSession(authOptions)
     const body = (await request.json()) as CreateMessageRequest
     const { content, conversationId, parentMessageId } = body
 
@@ -55,7 +54,7 @@ export const POST = withAuth(async (request: Request, user) => {
     }
 
     const newMessage = new Message({
-      userId: user.id,
+      userId: session?.user.id,
       sender: 'user',
       content,
       conversationId,
@@ -66,7 +65,7 @@ export const POST = withAuth(async (request: Request, user) => {
 
     // TODO: Generate AI response
     const aiResponse = new Message({
-      userId: user.id, // change to AI user ID
+      userId: session?.user.id, // change to AI user ID
       sender: 'ai',
       content: 'AI response placeholder',
       conversationId,
@@ -86,4 +85,4 @@ export const POST = withAuth(async (request: Request, user) => {
       { status: 500 }
     )
   }
-})
+}

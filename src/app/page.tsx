@@ -26,7 +26,7 @@ export default function Home() {
     } else {
       return (
         <Link
-          href="/login"
+          href="/signin"
           className="border border-solid border-black rounded"
         >
           Sign In

@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
-import { withAuth } from '@/middleware/auth'
-import { connectDB } from '@/lib/mongodb'
+import { authOptions } from '@/lib/auth'
 import Message from '@/models/Message'
+import { getServerSession } from 'next-auth'
+import { NextResponse } from 'next/server'
 
 type Conversation = {
   _id: string
@@ -9,11 +9,11 @@ type Conversation = {
   updatedAt: string
 }
 
-export const GET = withAuth(async (request, user) => {
+export const GET = async () => {
   try {
-    await connectDB()
+    const session = await getServerSession(authOptions)
     const conversations: Conversation[] = await Message.aggregate([
-      { $match: { userId: user.id } },
+      { $match: { userId: session?.user.id } },
       {
         $group: {
           _id: '$conversationId',
@@ -31,4 +31,4 @@ export const GET = withAuth(async (request, user) => {
       { status: 500 }
     )
   }
-})
+}

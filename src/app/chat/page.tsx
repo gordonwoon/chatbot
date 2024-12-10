@@ -1,54 +1,72 @@
 'use client'
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MessageDocument } from '@/models/Message'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { signOut, useSession } from 'next-auth/react'
+import { useState } from 'react'
 
-type Conversation = {
+interface Conversation {
   _id: string
   lastMessage: string
   updatedAt: string
 }
 
+interface Message {
+  _id: string
+  content: string
+  sender: 'user' | 'assistant'
+}
+
 export default function ChatPage() {
-  const [input, setInput] = useState('')
+  const { data: session } = useSession()
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null)
+  const [input, setInput] = useState('')
   const queryClient = useQueryClient()
 
-  // Fetch conversations
-  const { data: conversations } = useQuery<Conversation[]>({
-    queryKey: ['conversations'],
-    queryFn: () => fetch('/api/conversations').then(res => res.json())
-  })
+  // Fetch conversations with proper type
+  const { data: conversations = [], isPending: conversationsLoading } =
+    useQuery<Conversation[]>({
+      queryKey: ['conversations'],
+      queryFn: async () => {
+        const res = await fetch('/api/conversations')
+        if (!res.ok) throw new Error('Failed to fetch conversations')
+        return res.json()
+      }
+    })
 
   // Fetch messages for selected conversation
   const {
-    data: messages,
-    isPending,
+    data: messages = [],
+    isPending: messagesLoading,
     error
-  } = useQuery<MessageDocument[]>({
+  } = useQuery<Message[]>({
     queryKey: ['messages', selectedConversationId],
-    queryFn: () =>
-      selectedConversationId
-        ? fetch(`/api/messages?conversationId=${selectedConversationId}`).then(
-            res => res.json()
-          )
-        : Promise.resolve([]),
+    queryFn: async () => {
+      if (!selectedConversationId) return []
+      const res = await fetch(
+        `/api/messages?conversationId=${selectedConversationId}`
+      )
+      if (!res.ok) throw new Error('Failed to fetch messages')
+      return res.json()
+    },
     enabled: !!selectedConversationId
   })
 
   // Send message mutation
   const { mutate: sendMessage } = useMutation({
-    mutationFn: (content: string) =>
-      fetch('/api/messages', {
+    mutationFn: async (content: string) => {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content,
-          conversationId: selectedConversationId || crypto.randomUUID()
+          conversationId: selectedConversationId
         })
-      }).then(res => res.json()),
+      })
+      if (!res.ok) throw new Error('Failed to send message')
+      return res.json()
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['messages', selectedConversationId]
@@ -57,11 +75,21 @@ export default function ChatPage() {
       setInput('')
     }
   })
-
   return (
     <div className="flex h-screen">
       {/* Conversations Sidebar */}
       <div className="w-64 border-r p-4">
+        <div className="mb-4">
+          <span className="text-sm text-gray-600">
+            Signed in as: {session?.user?.email}
+          </span>
+          <button
+            onClick={() => signOut({ callbackUrl: '/signin' })}
+            className="w-full mt-2 p-2 bg-red-500 text-white rounded text-sm"
+          >
+            Sign Out
+          </button>
+        </div>
         <button
           onClick={() => setSelectedConversationId(null)}
           className="w-full mb-4 p-2 bg-blue-500 text-white rounded"
@@ -89,7 +117,7 @@ export default function ChatPage() {
       {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-y-auto p-4">
-          {isPending ? (
+          {messagesLoading ? (
             <div>Loading messages...</div>
           ) : error ? (
             <div>Error: {error.message}</div>

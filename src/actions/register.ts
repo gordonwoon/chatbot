@@ -1,5 +1,4 @@
 'use server'
-import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
 
@@ -13,7 +12,6 @@ export const register = async (values: RegisterValues) => {
   const { email, password, name } = values
 
   try {
-    await connectDB()
     const userFound = await User.findOne({ email })
     if (userFound) {
       return {
