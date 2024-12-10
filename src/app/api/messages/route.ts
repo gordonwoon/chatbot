@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb'
 import Message from '@/models/Message'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
+import { generateAIResponse } from '@/lib/gemini'
 
 interface CreateMessageRequest {
   content: string
@@ -56,6 +57,7 @@ export const POST = async (request: Request) => {
       )
     }
 
+    // Save user message
     const newMessage = new Message({
       userId: session?.user.id,
       sender: 'user',
@@ -66,15 +68,27 @@ export const POST = async (request: Request) => {
 
     await newMessage.save()
 
-    // TODO: Generate AI response
+    // Get conversation history
+    const conversationHistory = await Message.find({
+      conversationId
+    }).sort({ timestamp: 1 })
+
+    // Generate AI response
+    const aiContent = await generateAIResponse(
+      conversationHistory.map(msg => ({
+        content: msg.content,
+        sender: msg.sender
+      }))
+    )
+
+    // Save AI response
     const aiResponse = new Message({
-      userId: session?.user.id, // change to AI user ID
+      userId: session?.user.id,
       sender: 'ai',
-      content: 'AI response placeholder',
+      content: aiContent,
       conversationId,
       parentMessageId: newMessage._id
     })
-
     await aiResponse.save()
 
     return NextResponse.json(

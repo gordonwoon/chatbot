@@ -17,9 +17,9 @@ interface Message {
 
 export default function ChatPage() {
   const { data: session } = useSession()
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null)
+  const [selectedConversationId, setSelectedConversationId] = useState<string>(
+    () => crypto.randomUUID()
+  )
   const [input, setInput] = useState('')
   const queryClient = useQueryClient()
 
@@ -53,7 +53,7 @@ export default function ChatPage() {
   })
 
   // Send message mutation
-  const { mutate: sendMessage } = useMutation({
+  const { mutate: sendMessage, isPending } = useMutation({
     mutationFn: async (content: string) => {
       const res = await fetch('/api/messages', {
         method: 'POST',
@@ -71,7 +71,6 @@ export default function ChatPage() {
         queryKey: ['messages', selectedConversationId]
       })
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      setInput('')
     }
   })
   return (
@@ -90,7 +89,7 @@ export default function ChatPage() {
           </button>
         </div>
         <button
-          onClick={() => setSelectedConversationId(null)}
+          onClick={() => setSelectedConversationId(() => crypto.randomUUID())}
           className="w-full mb-4 p-2 bg-blue-500 text-white rounded"
         >
           New Chat
@@ -138,16 +137,29 @@ export default function ChatPage() {
         <form
           onSubmit={e => {
             e.preventDefault()
-            if (input.trim()) sendMessage(input)
+            if (input.trim() && !isPending) {
+              setInput('') // Clear immediately on submit
+              sendMessage(input.trim())
+            }
           }}
           className="p-4 border-t"
         >
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="w-full p-2 border rounded"
-          />
+          <div className="relative">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              disabled={isPending}
+              placeholder={isPending ? 'Sending...' : 'Type your message...'}
+              className={`w-full p-2 border rounded ${
+                isPending ? 'bg-gray-100' : ''
+              }`}
+            />
+            {isPending && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+              </div>
+            )}
+          </div>
         </form>
       </div>
     </div>

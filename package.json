@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@tanstack/react-query": "^5.62.3",
     "bcryptjs": "^2.4.3",
     "mongoose": "^8.8.4",
