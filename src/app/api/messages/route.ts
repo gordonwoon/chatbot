@@ -1,4 +1,5 @@
 import { authOptions } from '@/lib/auth'
+import { connectDB } from '@/lib/mongodb'
 import Message from '@/models/Message'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
@@ -11,6 +12,7 @@ interface CreateMessageRequest {
 
 export const GET = async (request: Request) => {
   try {
+    await connectDB()
     const session = await getServerSession(authOptions)
 
     // Get conversation ID from URL params
@@ -42,6 +44,7 @@ export const GET = async (request: Request) => {
 
 export const POST = async (request: Request) => {
   try {
+    await connectDB()
     const session = await getServerSession(authOptions)
     const body = (await request.json()) as CreateMessageRequest
     const { content, conversationId, parentMessageId } = body

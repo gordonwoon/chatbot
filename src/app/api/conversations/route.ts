@@ -1,4 +1,5 @@
 import { authOptions } from '@/lib/auth'
+import { connectDB } from '@/lib/mongodb'
 import Message from '@/models/Message'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
@@ -11,6 +12,7 @@ type Conversation = {
 
 export const GET = async () => {
   try {
+    await connectDB()
     const session = await getServerSession(authOptions)
     const conversations: Conversation[] = await Message.aggregate([
       { $match: { userId: session?.user.id } },

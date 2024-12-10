@@ -1,5 +1,4 @@
 'use client'
-import { MessageDocument } from '@/models/Message'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { signOut, useSession } from 'next-auth/react'
 import { useState } from 'react'
@@ -97,27 +96,31 @@ export default function ChatPage() {
           New Chat
         </button>
         <ul>
-          {conversations?.map(conv => (
-            <li
-              key={conv._id}
-              onClick={() => setSelectedConversationId(conv._id)}
-              className={`p-2 cursor-pointer hover:bg-gray-100 ${
-                selectedConversationId === conv._id ? 'bg-gray-200' : ''
-              }`}
-            >
-              <div className="truncate">{conv.lastMessage}</div>
-              <div className="text-xs text-gray-500">
-                {new Date(conv.updatedAt).toLocaleDateString()}
-              </div>
-            </li>
-          ))}
+          {conversationsLoading ? (
+            <div>Loading messages...</div>
+          ) : (
+            conversations?.map(conv => (
+              <li
+                key={conv._id}
+                onClick={() => setSelectedConversationId(conv._id)}
+                className={`p-2 cursor-pointer hover:bg-gray-100 ${
+                  selectedConversationId === conv._id ? 'bg-gray-200' : ''
+                }`}
+              >
+                <div className="truncate">{conv.lastMessage}</div>
+                <div className="text-xs text-gray-500">
+                  {new Date(conv.updatedAt).toLocaleDateString()}
+                </div>
+              </li>
+            ))
+          )}
         </ul>
       </div>
 
       {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-y-auto p-4">
-          {messagesLoading ? (
+          {selectedConversationId && messagesLoading ? (
             <div>Loading messages...</div>
           ) : error ? (
             <div>Error: {error.message}</div>
