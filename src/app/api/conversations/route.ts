@@ -1,14 +1,9 @@
 import { authOptions } from '@/lib/auth'
 import { connectDB } from '@/lib/mongodb'
+import { Conversation } from '@/models/Conversation'
 import Message from '@/models/Message'
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
-
-type Conversation = {
-  _id: string
-  lastMessage: string
-  updatedAt: string
-}
 
 export const GET = async () => {
   try {
@@ -19,8 +14,8 @@ export const GET = async () => {
       {
         $group: {
           _id: '$conversationId',
-          lastMessage: { $last: '$content' },
-          updatedAt: { $max: '$createdAt' }
+          content: { $last: '$content' },
+          timestamp: { $max: '$timestamp' }
         }
       },
       { $sort: { updatedAt: -1 } }

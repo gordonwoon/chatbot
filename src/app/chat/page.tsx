@@ -2,18 +2,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { signOut, useSession } from 'next-auth/react'
 import { useState } from 'react'
-
-interface Conversation {
-  _id: string
-  lastMessage: string
-  updatedAt: string
-}
-
-interface Message {
-  _id: string
-  content: string
-  sender: 'user' | 'assistant'
-}
+import { Conversation } from '@/models/Conversation'
+import { MessageDocument } from '@/models/Message'
 
 export default function ChatPage() {
   const { data: session } = useSession()
@@ -39,7 +29,7 @@ export default function ChatPage() {
     data: messages = [],
     isPending: messagesLoading,
     error
-  } = useQuery<Message[]>({
+  } = useQuery<MessageDocument[]>({
     queryKey: ['messages', selectedConversationId],
     queryFn: async () => {
       if (!selectedConversationId) return []
@@ -106,9 +96,9 @@ export default function ChatPage() {
                   selectedConversationId === conv._id ? 'bg-gray-200' : ''
                 }`}
               >
-                <div className="truncate">{conv.lastMessage}</div>
+                <div className="truncate">{conv.content}</div>
                 <div className="text-xs text-gray-500">
-                  {new Date(conv.updatedAt).toLocaleDateString()}
+                  {new Date(conv.timestamp).toLocaleDateString()}
                 </div>
               </li>
             ))
