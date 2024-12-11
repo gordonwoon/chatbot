@@ -1,3 +1,4 @@
+import { MessageDocument } from '@/models/Message'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -22,6 +23,42 @@ export function MessageInput({ selectedConversationId }: Props) {
       })
       if (!res.ok) throw new Error('Failed to send message')
       return res.json()
+    },
+    onMutate: async newContent => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({
+        queryKey: ['messages', selectedConversationId]
+      })
+
+      // Get current messages
+      const previousMessages = queryClient.getQueryData([
+        'messages',
+        selectedConversationId
+      ])
+
+      // Optimistically update the messages list
+      queryClient.setQueryData(
+        ['messages', selectedConversationId],
+        (old: MessageDocument[]) => {
+          const optimisticMessage = {
+            _id: 'temp-' + Date.now(),
+            content: newContent,
+            sender: 'user',
+            conversationId: selectedConversationId,
+            timestamp: new Date()
+          }
+          return [...(old || []), optimisticMessage]
+        }
+      )
+
+      return { previousMessages }
+    },
+    onError: (err, newContent, context) => {
+      // Rollback on error
+      queryClient.setQueryData(
+        ['messages', selectedConversationId],
+        context?.previousMessages
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

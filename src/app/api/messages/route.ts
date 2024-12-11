@@ -68,6 +68,12 @@ export const POST = async (request: Request) => {
 
     await newMessage.save()
 
+    // Send immediate response with user message
+    const response = NextResponse.json(
+      { userMessage: newMessage },
+      { status: 201 }
+    )
+
     // Get conversation history
     const conversationHistory = await Message.find({
       conversationId
@@ -91,10 +97,7 @@ export const POST = async (request: Request) => {
     })
     await aiResponse.save()
 
-    return NextResponse.json(
-      { userMessage: newMessage, aiMessage: aiResponse },
-      { status: 201 }
-    )
+    return response
   } catch (error) {
     console.error('Error creating message:', error)
     return NextResponse.json(
