@@ -78,3 +78,5 @@ TailwindCSS - Styling
 ## Deployment
 
 The application can be deployed on Vercel:
+
+Application is hosted [here](https://chatbot-ashen-psi.vercel.app/)
