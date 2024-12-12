@@ -29,3 +29,33 @@ export const GET = async () => {
     )
   }
 }
+
+export const DELETE = async (request: Request) => {
+  try {
+    await connectDB()
+    const session = await getServerSession(authOptions)
+    const { searchParams } = new URL(request.url)
+    const conversationId = searchParams.get('id')
+
+    if (!conversationId) {
+      return NextResponse.json(
+        { error: 'conversationId is required' },
+        { status: 400 }
+      )
+    }
+
+    // Delete all messages in conversation
+    await Message.deleteMany({
+      conversationId,
+      userId: session?.user.id
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    console.error('Error deleting message:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete message' },
+      { status: 500 }
+    )
+  }
+}

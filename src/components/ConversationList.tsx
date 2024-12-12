@@ -1,5 +1,5 @@
 import { Conversation } from '@/models/Conversation'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface Props {
   selectedConversationId: string
@@ -7,6 +7,7 @@ interface Props {
 }
 
 export function ConversationsList({ selectedConversationId, onSelect }: Props) {
+  const queryClient = useQueryClient()
   // Fetch conversations with proper type
   const { data: conversations = [], isPending: conversationsLoading } =
     useQuery<Conversation[]>({
@@ -17,6 +18,27 @@ export function ConversationsList({ selectedConversationId, onSelect }: Props) {
         return res.json()
       }
     })
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/conversations?id=${id}`, {
+        method: 'DELETE'
+      })
+      if (!res.ok) throw new Error('Failed to delete conversation')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    }
+  })
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation() // Prevent conversation selection
+    if (confirm('Delete this conversation?')) {
+      await deleteMutation.mutateAsync(id)
+      if (id === selectedConversationId) {
+        onSelect(crypto.randomUUID()) // Create new conversation if deleted selected one
+      }
+    }
+  }
   if (conversationsLoading) return <div>Loading messages...</div>
 
   return (
@@ -33,6 +55,12 @@ export function ConversationsList({ selectedConversationId, onSelect }: Props) {
           <div className="text-xs text-gray-500">
             {new Date(conv.timestamp).toLocaleDateString()}
           </div>
+          <button
+            onClick={e => handleDelete(e, conv._id)}
+            className="text-xs text-red-600"
+          >
+            delete
+          </button>
         </li>
       ))}
     </ul>
