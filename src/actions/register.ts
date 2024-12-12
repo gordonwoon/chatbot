@@ -21,6 +21,7 @@ export const register = async (values: RegisterValues) => {
         error: 'Email already exists!'
       }
     }
+    console.log(`no user found, creating user: ${name}`)
     const hashedPassword = await bcrypt.hash(password, 10)
     const user = new User({
       name,
