@@ -1,3 +1,4 @@
+import { SYSTEM_PROMPT, SYSTEM_PROMPT_FUN } from '@/config/prompt'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
@@ -15,6 +16,9 @@ export const generateAIResponse = async (
         temperature: 0.7
       }
     })
+
+    // Send system prompt first
+    await chat.sendMessage(SYSTEM_PROMPT_FUN)
 
     // Send each message in sequence to build context
     for (let i = 0; i < messages.length - 1; i++) {
