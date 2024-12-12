@@ -13,7 +13,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen">
       {/* Conversations Sidebar */}
-      <div className="w-64 border-r p-4">
+      <div className="w-64 border-r p-4 flex flex-col">
         <UserProfile />
         <button
           onClick={() => setSelectedConversationId(() => crypto.randomUUID())}

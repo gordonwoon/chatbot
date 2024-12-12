@@ -1,6 +1,7 @@
 import { MessageDocument } from '@/models/Message'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import Loader from './Loader'
 
 interface Props {
   selectedConversationId: string
@@ -90,7 +91,7 @@ export function MessageInput({ selectedConversationId }: Props) {
         />
         {isPending && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+            <Loader />
           </div>
         )}
       </div>

@@ -1,24 +1,30 @@
 'use client'
+import Loader from '@/components/Loader'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { FormEvent, useState } from 'react'
 
 export default function Login() {
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setLoading(true)
     const formData = new FormData(event.currentTarget)
     const res = await signIn('credentials', {
       email: formData.get('email'),
       password: formData.get('password'),
-      callbackUrl: '/chat'
+      redirect: false
     })
+    setLoading(false)
     if (res?.error) {
       setError(res.error as string)
-    }
-    if (res?.ok) {
+    } else if (res?.ok) {
       setError('')
+      router.push('/chat') // Only redirect on successful sign in
     }
   }
 
@@ -28,7 +34,6 @@ export default function Login() {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-96"
       >
-        {error && <div className="text-black">{error}</div>}
         <h1 className="text-2xl mb-4">Sign In</h1>
         <label className="w-full text-sm">Email</label>
         <input
@@ -46,11 +51,13 @@ export default function Login() {
             name="password"
           />
         </div>
+        {error && <div className="text-red-600 text-sm">{error}</div>}
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded"
+          disabled={loading}
         >
-          Sign In
+          {loading ? <Loader /> : 'Sign In'}
         </button>
 
         <Link

@@ -26,12 +26,13 @@ export const authOptions: NextAuthOptions = {
         const user = await User.findOne({
           email: credentials?.email
         }).select('+password')
-        if (!user) throw new Error('Wrong Email')
+        if (!user) throw new Error('Incorrect credentials, please try again')
         const passwordMatch = await bcrypt.compare(
           credentials!.password,
           user.password
         )
-        if (!passwordMatch) throw new Error('Wrong Password')
+        if (!passwordMatch)
+          throw new Error('Incorrect credentials, please try again')
         return user
       }
     })

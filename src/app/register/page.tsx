@@ -3,18 +3,22 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { register } from '@/actions/register'
+import Loader from '@/components/Loader'
 
 export default function Register() {
   const [error, setError] = useState<string>()
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const ref = useRef<HTMLFormElement>(null)
 
   const handleSubmit = async (formData: FormData) => {
+    setLoading(true)
     const r = await register({
       email: formData.get('email') as string,
       password: formData.get('password') as string,
       name: formData.get('name') as string
     })
+    setLoading(false)
     ref.current?.reset()
     if (r?.error) {
       setError(r.error)
@@ -65,7 +69,7 @@ export default function Register() {
           className="w-full border border-solid border-black py-1.5 mt-2.5 rounded
           transition duration-150 ease hover:bg-black"
         >
-          Sign up
+          {loading ? <Loader /> : 'Sign up'}{' '}
         </button>
 
         <Link

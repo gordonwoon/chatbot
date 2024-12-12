@@ -20,7 +20,7 @@ export function ConversationsList({ selectedConversationId, onSelect }: Props) {
   if (conversationsLoading) return <div>Loading messages...</div>
 
   return (
-    <ul>
+    <ul className="overflow-y-auto flex-1 -mx-4 px-4">
       {conversations?.map(conv => (
         <li
           key={conv._id}
