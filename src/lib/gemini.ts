@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SYSTEM_PROMPT, SYSTEM_PROMPT_FUN } from '@/config/prompt'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
