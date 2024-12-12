@@ -8,7 +8,7 @@ export const generateAIResponse = async (
   messages: { content: string; sender: 'user' | 'ai' }[]
 ) => {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' })
 
     // Convert chat history to Gemini format
     const chat = model.startChat({
